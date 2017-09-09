@@ -7,11 +7,11 @@ LDFLAGS=-lm
 .SUFFIXES: .o .c
 
 $(PROGRAM): $(OBJS)
-	$(CC) -o $(PROGRAM) $^
+	$(CC) -o $(PROGRAM) $^ $(LDFLAGS)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
 .PHONY: clean
 clean:
-	$(RM) $(PROGRAM) $(OBJS)
+	$(RM) $(PROGRAM) $(OBJS) $(LDFLAGS)

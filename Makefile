@@ -1,7 +1,8 @@
 PROGRAM = toWhisper
 OBJS = vector.o wave.o toWhisper.o
 CC = gcc
-CFLAGS = -Wall -O3
+CFLAGS = -Wall -O3 -std=gnu11
+LDFLAGS=-lm
 
 .SUFFIXES: .o .c
 

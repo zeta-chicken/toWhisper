@@ -22,12 +22,10 @@ int    setWindow(char*);
 int order = 0;
 //有声音割合(0.0~1.0)
 double rate = 0.0;
-//プリエンファシスHPFの係数(0.0~1.0)
+//プリエンファシスフィルタの係数(0.0~1.0)
 double hpf = 0.97;
-//デエンファシスLPFの係数(0.0~1.0)
+//デエンファシスフィルタの係数(0.0~1.0)
 double lpf = 0.97;
-//ピーキングフィルタ
-double p_fc = 3000.0, p_Q = 0.5, p_Gain = 0.5;
 //入出力ファイル
 char *inputFile = NULL, *outputFile = NULL, *eFile = NULL;
 //frame幅
@@ -61,7 +59,7 @@ int main(int argc, char* argv[])
     if (order == 0)
         order = (double)getSamplerate(src) / 44100.0 * 40.0;
 
-    //20msのフレーム幅
+    //フレーム幅をサンプル数に
     int frame = (double)getSamplerate(src) * frameT / 1000.0;
     if (frame%2 != 0) frame++;
 
@@ -140,16 +138,10 @@ int main(int argc, char* argv[])
         for (int j=0; j<frame; j++) {
             y[j] = genWhite();
         }
-        int tau1 = y[0], tau2 = y[0];
-        for (int j=1; j<frame; j++) {
-            tau2 = y[j];
-            y[j] = y[j] - 0.97*tau1;
-            tau1 = tau2;
-        }
 
-        for (int i=1; i<frame; i++) E[i] = ((1.0-pow(rate, 0.5))*E[i-1] + E[i]) / (2.0-pow(rate, 0.5));
+        for (int j=1; j<frame; j++) E[j] = ((1.0-rate)*E[j-1] + E[j]) / (2.0-rate);
         //残差信号とノイズの二乗平均レベルをそろえる
-        max = sqrt(3*max/frame);
+        max = sqrt(3.0*max/(double)frame);
         for (int j=0; j<frame; j++) {
             y[j] = rate*E[j] + (1.0-rate)*max*y[j];
         }
@@ -164,20 +156,6 @@ int main(int argc, char* argv[])
         }
 
         for (int j=0; j<frame; j++) v1->elem[j+i*frame/2] += y[j];
-    }
-
-    //いい感じのピーキングフィルタ
-    {
-        double af[3], bf[3];
-        double fc = 0.5/M_PI*tan(p_fc*M_PI/(double)getSamplerate(src)), Q = p_Q, gain = p_Gain;
-        double C = 2.0*M_PI*fc/Q;
-        bf[0] = (1.0+C*(1.0+gain)+4.0*M_PI*M_PI*fc*fc)/(1.0+C+4*M_PI*M_PI*fc*fc);
-        bf[1] = (8.0*M_PI*M_PI*fc*fc-2.0)/(1.0+C+4.0*M_PI*M_PI*fc*fc);
-        bf[2] = (1.0-C*(1.0+gain)+4.0*M_PI*M_PI*fc*fc)/(1.0+C+4*M_PI*M_PI*fc*fc);
-        af[0] = 1.0;
-        af[1] = bf[1];
-        af[2] = (1.0-C+4.0*M_PI*M_PI*fc*fc)/(1.0+C+4.0*M_PI*M_PI*fc*fc);
-        ltiFilter(v1->elem, length, af, 3, bf, 3);
     }
 
     //デエンファシス
@@ -249,9 +227,6 @@ void LevinsonDurbin(double* x, size_t length, double* a, size_t lpcOrder)
 
 double genWhite(void)
 {
-    static int a = 0;
-    if (a == 0) srand((unsigned)time(NULL));
-    a = 1;
     return (double)rand()/(double)RAND_MAX*2.0-1.0;
 }
 
@@ -336,18 +311,17 @@ void printHelp(void)
 
 int initMain(int argc, char* argv[])
 {
-    int count = 0;
+    srand((unsigned)time(NULL));
 
     for (int i=1; i<argc; i++) {
         if (argv[i][0] != '-') {
-            if (count == 0) {
+            if (inputFile == NULL) {
                 inputFile = argv[i];
             } else {
                 printHelp();
                 return -1;
             }
-             count++;
-             continue;
+            continue;
         }
 
         switch (argv[i][1]) {

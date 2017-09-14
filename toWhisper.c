@@ -32,8 +32,6 @@ char *inputFile = NULL, *outputFile = NULL, *eFile = NULL;
 double frameT = 20.0;
 //各種フラグ
 int printFlag = 0;
-//フォルマント周波数の増減
-//double alpha = 1.;
 //窓関数タイプ
 double (* const windowFunction[])(int, int) = {hamming, hanning, blackman};
 enum {
@@ -139,14 +137,11 @@ int main(int argc, char* argv[])
             y[j] = genWhite();
         }
 
-        for (int j=1; j<frame; j++) E[j] = ((1.0-rate)*E[j-1] + E[j]) / (2.0-rate);
         //残差信号とノイズの二乗平均レベルをそろえる
         max = sqrt(3.0*max/(double)frame);
         for (int j=0; j<frame; j++) {
             y[j] = rate*E[j] + (1.0-rate)*max*y[j];
         }
-
-        //for (int j=1; j<order+1; j++) a[j] *= pow(alpha, (double)j);
 
         //音声合成フィルタ
         for (int j=0; j<frame; j++) {
@@ -289,17 +284,18 @@ void printHelp(void)
 {
     printf("The translating voice into whisper voice system\n");
     printf("Version 0.91\n");
-    printf("Copyright (C) 2017 zeta\n\n");
+    printf("Copyright (C) 2017 zeta\n");
+    printf("All rights reserved.\n\n");
     printf("usage:\n");
     printf("\ttoWhisper [options] [infile]\n");
     printf("options:\n");
-    printf("\t-o : output file name.       [N/A]     [wave file]\n");
-    printf("\t-e : vowel sound file name.  [N/A]     [wave file]\n");
-    printf("\t-l : lpf filter coefficient. [0.97]    [0.0, 1.0)\n");
-    printf("\t-r : vowel sound rate.       [0.0]     [0.0, 1.0]\n");
-    printf("\t-w : window function         [hamming] [function]\n");
-    printf("\t-f : frame length(ms).       [20]\n");
-    printf("\t-O : LPC order.              [auto]\n");
+    printf("\t-o : output file name.               [N/A]     [wave file]\n");
+    printf("\t-e : vowel sound file name.          [N/A]     [wave file]\n");
+    printf("\t-l : de-emphasis filter coefficient. [0.97]    (-1.0, 1.0)\n");
+    printf("\t-r : vowel sound rate.               [0.0]     [ 0.0, 1.0]\n");
+    printf("\t-w : window function                 [hamming] [function]\n");
+    printf("\t-f : frame length(ms).               [20]\n");
+    printf("\t-O : LPC order.                      [auto]\n");
     printf("\t-p : print some information about synthesizing.\n");
     printf("\t-h : print this sentence.\n");
     printf("infile:\n");

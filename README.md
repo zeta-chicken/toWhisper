@@ -15,7 +15,7 @@ toWhisper [options] [infile]
 options: -oのみ必須
     -o : 出力ファイル名 [N/A] [wavefile]
     -e : 声帯音源の出力ファイル名 [N/A] [wavefile]
-    -l : lpfの強度 [0.97] (0.0 - 1.0)
+    -l : デエンファシスlsfの強度 [0.97] (-1.0 - 1.0)
     -r : 声帯音源の割合 [0.0] (0.0 - 1.0)
     -f : フレーム幅（ミリ秒） [20.0]
     -O : LPC次数 [auto]
